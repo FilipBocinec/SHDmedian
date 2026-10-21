@@ -1,20 +1,30 @@
-Package: scatterHD
-Title: What the Package Does (One Line, Title Case)
+Package: SHDmedian
+Title: Exact Bivariate and Approximate Scatter Halfspace Medians
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R:
+    person(
+        "Filip",
+        "Bočinec",
+        email = "bocinec@karlin.mff.cuni.cz",
+        role = c("aut", "cre")
+    )
+Description: Computes the scatter halfspace median for bivariate data
+    using a cutting-plane algorithm and an angular separation oracle, and
+    finite-direction approximate scatter medians in arbitrary dimension
+    using semidefinite programming with a fixed center.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 8.1.0
 Suggests: 
+    clarabel,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 LinkingTo: 
-    Rcpp
+    Rcpp,
+    RcppArmadillo
 Imports: 
-    clarabel,
+    Matrix,
     CVXR,
     mrfDepth,
     Rcpp
+Config/roxygen2/version: 8.1.1

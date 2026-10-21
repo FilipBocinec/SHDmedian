@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(scatterHD)
+library(SHDmedian)
 
-test_check("scatterHD")
+test_check("SHDmedian")

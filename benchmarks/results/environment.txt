@@ -1,0 +1,190 @@
+R version 4.5.3 (2026-03-11 ucrt)
+Platform: x86_64-w64-mingw32/x64
+Running under: Windows 11 x64 (build 26200)
+
+Matrix products: default
+  LAPACK version 3.12.1
+
+locale:
+[1] C
+system code page: 65001
+
+time zone: Europe/Bratislava
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] SHDmedian_0.0.0.9000
+
+loaded via a namespace (and not attached):
+ [1] compiler_4.5.3  backports_1.5.1 Matrix_1.7-4    cli_3.6.6      
+ [5] osqp_1.0.0      tools_4.5.3     gmp_0.7-5.1     Rcpp_1.1.2     
+ [9] highs_1.14.0-2  grid_4.5.3      checkmate_2.3.4 S7_0.2.2       
+[13] CVXR_1.9.3      scs_3.2.7       clarabel_0.11.3 lattice_0.22-9 
+       OMP_NUM_THREADS   OPENBLAS_NUM_THREADS        MKL_NUM_THREADS 
+                    ""                     ""                     "" 
+VECLIB_MAXIMUM_THREADS       BLIS_NUM_THREADS 
+                    ""                     "" 
+                     zlib                     bzlib                        xz 
+                  "1.3.1"      "1.0.8, 13-Jul-2019"                   "5.8.2" 
+               libdeflate                      PCRE                       ICU 
+                   "1.25"        "10.47 2025-10-21"                    "77.1" 
+                      TRE                     iconv                  readline 
+"TRE 0.8.0 R_fixes (BSD)"               "win_iconv"                        "" 
+                     BLAS 
+                       "" 
+    SHDmedian      clarabel        Matrix          Rcpp RcppArmadillo 
+ "0.0.0.9000"      "0.11.3"       "1.7.4"       "1.1.2"    "15.6.2.1" 
+         CVXR      mrfDepth 
+      "1.9.3"      "1.0.17" 
+$calls
+[1] 13
+
+$reused
+[1] 8
+
+$persistent_available
+[1] TRUE
+
+$setup_seconds
+[1] 0.01
+
+$solve_seconds
+[1] 2.58
+
+$version
+[1] "0.11.3"
+
+$settings
+$settings$max_iter
+[1] 200
+
+$settings$time_limit
+[1] Inf
+
+$settings$verbose
+[1] FALSE
+
+$settings$max_step_fraction
+[1] 0.99
+
+$settings$tol_gap_abs
+[1] 1e-08
+
+$settings$tol_gap_rel
+[1] 1e-08
+
+$settings$tol_feas
+[1] 1e-08
+
+$settings$tol_infeas_abs
+[1] 1e-08
+
+$settings$tol_infeas_rel
+[1] 1e-08
+
+$settings$tol_ktratio
+[1] 1e-06
+
+$settings$reduced_tol_gap_abs
+[1] 5e-05
+
+$settings$reduced_tol_gap_rel
+[1] 5e-05
+
+$settings$reduced_tol_feas
+[1] 1e-04
+
+$settings$reduced_tol_infeas_abs
+[1] 5e-12
+
+$settings$reduced_tol_infeas_rel
+[1] 5e-05
+
+$settings$reduced_tol_ktratio
+[1] 1e-04
+
+$settings$equilibrate_enable
+[1] TRUE
+
+$settings$equilibrate_max_iter
+[1] 10
+
+$settings$equilibrate_min_scaling
+[1] 1e-04
+
+$settings$equilibrate_max_scaling
+[1] 10000
+
+$settings$linesearch_backtrack_step
+[1] 0.8
+
+$settings$min_switch_step_length
+[1] 0.1
+
+$settings$min_terminate_step_length
+[1] 1e-04
+
+$settings$max_threads
+[1] 0
+
+$settings$direct_kkt_solver
+[1] TRUE
+
+$settings$direct_solve_method
+[1] "auto"
+
+$settings$static_regularization_enable
+[1] TRUE
+
+$settings$static_regularization_constant
+[1] 1e-08
+
+$settings$static_regularization_proportional
+[1] 4.930381e-32
+
+$settings$dynamic_regularization_enable
+[1] TRUE
+
+$settings$dynamic_regularization_eps
+[1] 1e-13
+
+$settings$dynamic_regularization_delta
+[1] 2e-07
+
+$settings$iterative_refinement_enable
+[1] TRUE
+
+$settings$iterative_refinement_reltol
+[1] 1e-13
+
+$settings$iterative_refinement_abstol
+[1] 1e-12
+
+$settings$iterative_refinement_max_iter
+[1] 10
+
+$settings$iterative_refinement_stop_ratio
+[1] 5
+
+$settings$presolve_enable
+[1] FALSE
+
+$settings$input_sparse_dropzeros
+[1] FALSE
+
+$settings$chordal_decomposition_enable
+[1] FALSE
+
+$settings$chordal_decomposition_merge_method
+[1] "clique_graph"
+
+$settings$chordal_decomposition_compact
+[1] TRUE
+
+$settings$chordal_decomposition_complete_dual
+[1] TRUE
+
+

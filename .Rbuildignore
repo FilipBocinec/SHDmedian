@@ -1,4 +1,8 @@
-^scatterHD\.Rproj$
+^SHDmedian\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^README\.Rmd$
+^\.validation$
+^benchmarks$
+^examples$
+^src/.*\.(dll|o)$
