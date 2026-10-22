@@ -1,8 +1,10 @@
 ^SHDmedian\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^LICENSE$
 ^README\.Rmd$
 ^\.validation$
 ^benchmarks$
 ^examples$
+^vignettes$
 ^src/.*\.(dll|o)$

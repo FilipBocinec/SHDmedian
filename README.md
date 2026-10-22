@@ -1,5 +1,26 @@
 # SHDmedian
 
+## Installation
+
+Install the package directly from GitHub using `devtools`:
+
+```r
+install.packages("devtools") # Run once if devtools is not installed.
+devtools::install_github("FilipBocinec/SHDmedian")
+library(SHDmedian)
+```
+
+For the approximate method, also install the optional solver:
+
+```r
+install.packages("clarabel")
+```
+
+The package contains C++ code, so installation requires compilation tools
+(Rtools on Windows, Xcode Command Line Tools on macOS, or a C++ toolchain on Linux).
+
+## Usage
+
 `SHDmedian()` computes scatter halfspace medians through one interface:
 
 ```r
