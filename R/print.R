@@ -9,8 +9,8 @@
 #'
 #' @export
 print.SHDmedian <- function(x, ...) {
-  cat("Bivariate scatter halfspace median\n")
-  cat(sprintf("Method: %s\n", x$method))
+  cat("Scatter halfspace median\n")
+  cat(sprintf("Method: %s (%s)\n", x$method, x$algorithm))
   cat(sprintf("Status: %s\n", x$status))
   cat(sprintf(
     "Certified: %s\n",
@@ -28,7 +28,7 @@ print.SHDmedian <- function(x, ...) {
 
   if (!is.na(x$best_k)) {
     cat(sprintf("Best k: %d\n", x$best_k))
-    cat(sprintf("Depth: %.6f\n", x$depth))
+    cat(sprintf("%s: %.6f\n", if (x$method == "approx") "Finite-direction depth" else "Depth", x$depth))
   } else {
     cat("Best k: unresolved\n")
   }

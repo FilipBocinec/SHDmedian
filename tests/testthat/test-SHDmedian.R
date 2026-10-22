@@ -9,7 +9,7 @@ test_that("SHDmedian returns the requested structure", {
     c(0.2, 1.4)
   )
 
-  result <- SHDmedian(
+  result <- SHDmedian(method = "exact",
     X = X,
     center_method = "mean",
     solver = "CLARABEL",
@@ -35,11 +35,11 @@ test_that("SHDmedian returns the requested structure", {
       "k_min",
       "k_max",
       "timing",
-      "search_details"
+      "search_details", "search_bounds", "algorithm", "d", "center_method"
     )
   )
 
-  expect_equal(result$method, "cutting-plane")
+  expect_equal(result$method, "exact")
   expect_equal(result$status, "optimal")
   expect_true(result$certified)
   expect_equal(result$n, nrow(X))
@@ -104,10 +104,10 @@ test_that("a supplied center is used by SHDmedian", {
 
   supplied_center <- c(0.1, -0.2)
 
-  result <- SHDmedian(
+  result <- SHDmedian(method = "exact",
     X = X,
     center_method = "tukey",
-    mu = supplied_center,
+    center = supplied_center,
     initial_directions = 4L,
     cuts_per_iteration = 4L,
     max_iterations = 100L
@@ -122,28 +122,30 @@ test_that("a supplied center is used by SHDmedian", {
 
 test_that("SHDmedian rejects unsupported data", {
   expect_error(
-    SHDmedian(matrix(1:9, ncol = 3L)),
+    SHDmedian(method = "exact", matrix(1:9, ncol = 3L)),
     "exactly two columns"
   )
 
   expect_error(
-    SHDmedian(matrix(1:2, nrow = 1L)),
+    SHDmedian(method = "exact", matrix(1:2, nrow = 1L)),
     "at least two observations"
   )
 
   X <- matrix(1:8, ncol = 2L)
 
   expect_error(
-    SHDmedian(
+    SHDmedian(method = "exact",
       X,
+      center_method = "mean",
       initial_directions = 0
     ),
     "positive integer"
   )
 
   expect_error(
-    SHDmedian(
+    SHDmedian(method = "exact",
       X,
+      center_method = "mean",
       separation_tol = -1
     ),
     "finite nonnegative"
@@ -162,7 +164,7 @@ test_that("SHDmedian has a print method", {
     c(0.3, 1)
   )
 
-  result <- SHDmedian(
+  result <- SHDmedian(method = "exact",
     X,
     center_method = "mean",
     initial_directions = 3L,
@@ -173,7 +175,7 @@ test_that("SHDmedian has a print method", {
   output <- capture.output(print(result))
 
   expect_true(any(grepl(
-    "Bivariate scatter halfspace median",
+    "Scatter halfspace median",
     output,
     fixed = TRUE
   )))

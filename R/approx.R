@@ -1,38 +1,4 @@
-#' Approximate scatter halfspace median using fixed finite directions
-#'
-#' Maximizes inclusive empirical directional depth for a fixed center. The
-#' selected matrix is one optimizer, not the barycenter of the median set.
-#' The default PD domain requires a validated strictly positive eigenvalue
-#' margin; numerically zero margins remain unresolved. PSD is also available.
-#'
-#' @param X Finite numeric n by d matrix, with n,d at least one.
-#' @param center Required finite fixed center of length d.
-#' @param U Optional d by L matrix of nonzero directions. Columns are normalized;
-#'   no directions are appended. Repeated and antipodal columns are permitted.
-#' @param n_directions Total automatic directions, at least d. Includes axes.
-#' @param seed Optional RNG seed. With a seed the caller's RNG state is restored;
-#'   otherwise automatic Gaussian directions consume the ordinary R RNG stream.
-#' @param domain Either strict positive definite (`"pd"`) or semidefinite (`"psd"`).
-#' @param control Named list: `abs_tol`, `rel_tol`, `pd_tol` (defaults 1e-8),
-#'   `reuse` (TRUE), `kernel` (`"cpp"` or `"R"`), and `solver` (a list of
-#'   Clarabel settings). Tolerances apply in internally scaled scatter units.
-#'
-#' @return A `SHDmedian_approx` object containing Sigma, center, normalized U,
-#'   selected_k, attained_k, depth_U, search_bounds, completion status,
-#'   eigenvalue and constraint diagnostics, per-level results, tolerances,
-#'   scalar transformation, solver metadata and elapsed times. A complete search
-#'   is conditional on numerical validations, not an exact-arithmetic certificate.
-#'   Partial resolution preserves the last supported bracket. Raw attained depth
-#'   uses no tolerance. The finite-direction depth is an upper bound on full depth.
-#' @examples
-#' if (requireNamespace("clarabel", quietly = TRUE)) {
-#' set.seed(1)
-#' X <- matrix(rnorm(90), 30, 3)
-#' fit <- SHDmedian_approx(X, center = rep(0, 3), n_directions = 50, seed = 2)
-#' fit$depth_U
-#' }
-#' @export
-SHDmedian_approx <- function(X, center, U = NULL, n_directions = 2000L,
+shd_approx <- function(X, center, U = NULL, n_directions = 2000L,
                              seed = NULL, domain = c("pd", "psd"), control = list()) {
   total_start <- proc.time()[["elapsed"]]
   X <- as.matrix(X)
@@ -92,7 +58,7 @@ SHDmedian_approx <- function(X, center, U = NULL, n_directions = 2000L,
     stop("Scatter scale is outside representable range; rescale X and center.")
   Y <- Y / scale
   if (!requireNamespace("clarabel", quietly = TRUE))
-    stop("Install the optional solver with install.packages('clarabel') to use SHDmedian_approx().")
+    stop("Install the optional solver with install.packages('clarabel') to use SHDmedian(method = 'approx').")
   solver_defaults <- clarabel::clarabel_control()
   if (length(ctrl$solver) && (is.null(names(ctrl$solver)) ||
       anyDuplicated(names(ctrl$solver)) || any(!names(ctrl$solver) %in% names(solver_defaults))))
@@ -235,14 +201,5 @@ SHDmedian_approx <- function(X, center, U = NULL, n_directions = 2000L,
     timing = list(preprocessing = prep_seconds, model_setup = setup_seconds,
       solver_setup = solver$setup_seconds, feasibility_solves = solver$solve_seconds,
       verification = verification_seconds, total = proc.time()[["elapsed"]] - total_start)),
-    class = "SHDmedian_approx")
-}
-
-#' @export
-print.SHDmedian_approx <- function(x, ...) {
-  cat("Finite-direction scatter halfspace median (", x$domain, ")\n", sep = "")
-  cat("Status:", x$status, " | optimum count bracket:", x$search_bounds, "\n")
-  cat("Attained directional depth:", x$depth_U, "\n")
-  print(x$Sigma)
-  invisible(x)
+    class = "SHDmedian")
 }

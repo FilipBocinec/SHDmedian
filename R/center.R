@@ -70,3 +70,22 @@ center_bivariate_data_d2 <- function(
     center_depth = center_depth
   )
 }
+
+# Centering is independent of the scatter optimization backend.
+shd_center <- function(X, center_method = c("tukey", "mean"), center = NULL) {
+  if (!is.null(center)) {
+    effective_method <- "supplied"
+  } else {
+    center_method <- match.arg(center_method)
+    effective_method <- center_method
+    center <- if (center_method == "mean") colMeans(X) else if (ncol(X) == 1L)
+      stats::median(X[, 1L]) else mrfDepth::hdepthmedian(X, maxdir = NULL)$median
+    if (is.null(center))
+      stop("Tukey centering failed; supply center or use center_method = 'mean'.",
+           call. = FALSE)
+  }
+  if (!is.numeric(center) || is.complex(center) || length(center) != ncol(X) ||
+      any(!is.finite(center)))
+    stop("center must be a finite numeric vector of length ncol(X).", call. = FALSE)
+  list(center = as.numeric(center), method = effective_method)
+}

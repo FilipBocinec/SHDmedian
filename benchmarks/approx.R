@@ -10,7 +10,7 @@ for (seed in c(11L, 29L, 47L)) {
   set.seed(seed)
   X <- matrix(rnorm(500L * 10L), 500L, 10L)
   for (reuse in c(TRUE, FALSE)) {
-    fit <- SHDmedian_approx(X, center = rep(0, 10), n_directions = 2000L,
+    fit <- SHDmedian(X, center = rep(0, 10), n_directions = 2000L,
       seed = seed + 100L, control = list(reuse = reuse, solver = list(
         verbose = FALSE, presolve_enable = FALSE, chordal_decomposition_enable = FALSE)))
     key <- paste(seed, reuse, sep = "_")
@@ -37,8 +37,8 @@ saveRDS(fits, file.path(out,"fits.rds"))
 # Small 2D comparison uses the existing full angular oracle for every k.
 set.seed(71)
 X <- matrix(rnorm(16), 8, 2)
-approx <- SHDmedian_approx(X, c(0,0), n_directions = 100, seed = 72, domain = "psd")
-exact_time <- system.time(exact <- SHDmedian(X, mu = c(0,0), initial_directions = 8,
+approx <- SHDmedian(X, center =  c(0,0), n_directions = 100, seed = 72, domain = "psd")
+exact_time <- system.time(exact <- SHDmedian(X, method = "exact", center = c(0,0), initial_directions = 8,
                                            cuts_per_iteration = 8, verbose = FALSE))
 arr <- SHDmedian:::angular_arrangement_d2(X)
 full <- vapply(seq_len(nrow(X)), function(k) {

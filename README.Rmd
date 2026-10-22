@@ -2,77 +2,52 @@
 output: github_document
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
-)
-```
-
 # SHDmedian
 
-`SHDmedian()` retains the exact bivariate cutting-plane implementation.
-`SHDmedian_approx()` adds finite-direction SDP optimization in any dimension,
-with a fixed center supplied explicitly:
+`SHDmedian()` computes scatter halfspace medians through one interface:
 
-``` r
-set.seed(1)
-X <- matrix(rnorm(300), 100, 3)
-fit <- SHDmedian_approx(X, center = rep(0, 3), n_directions = 200, seed = 42)
-fit$Sigma
-fit$depth_U
-fit$search_bounds
+```r
+# Finite-direction approximation in any positive dimension (the default).
+fit <- SHDmedian(X, method = "approx", center_method = "mean",
+                 n_directions = 200, seed = 42)
+
+# Exact bivariate cutting-plane algorithm.
+fit2 <- SHDmedian(X2, method = "exact", center_method = "tukey")
+
+# A supplied center overrides center_method for either method.
+fit3 <- SHDmedian(X, method = "approx", center = rep(0, ncol(X)))
 ```
 
-The approximate method defaults to the positive definite domain. Use
-`domain = "psd"` for semidefinite matrices. Inspect `status`, `search_bounds`,
-and `levels` for numerical uncertainty. `depth_U` uses raw inclusive counts
-on the returned fixed directions; it is an upper bound on full directional
-depth. The selected matrix is not a barycenter of the median set.
+Centering defaults to `"tukey"`; `"mean"` uses column means. Tukey centering
+above dimension two is approximate and requires suitable full-rank data.
+Use a supplied `center` or `"mean"` if Tukey centering fails.
 
-See `doc/approximate-median.md`, `examples/approx.R`, and
-`benchmarks/approx.R` for numerical details, independent validation, and
-reproducible timings. The approximation requires the optional `clarabel`
-package (`install.packages("clarabel")`).
+Both methods return class `SHDmedian`, with `Sigma`, `center`, `method`,
+`status`, `depth`, `best_k`, `certified`, and timing information. Approximate
+`depth` is attained depth on the returned finite direction set `U`, also
+available as `depth_U`. It is an upper bound on the full directional depth of
+that matrix. Inspect `status`, `search_bounds`, and `levels` for numerical
+uncertainty. A complete approximate search is not a full-direction certificate.
+The returned matrix is one optimizer, not a barycenter of the median set.
 
-<!-- badges: start -->
-<!-- badges: end -->
+Approximation defaults to positive definite matrices (`domain = "pd"`),
+with `domain = "psd"` also available. Exact computation currently supports
+only the positive semidefinite domain, which is its default. Exact results
+use the complete bivariate angular oracle under numerical tolerances.
+The approximate method requires the optional `clarabel` package.
 
-The goal of SHDmedian is to ...
+Approximate settings include `U`, `n_directions`, `seed`, and `control`
+(tolerances, kernel, model reuse, and Clarabel settings). Exact settings include
+`solver`, `initial_directions`, `cuts_per_iteration`, `max_iterations`, and
+`separation_tol`. See `?SHDmedian` for all arguments and output fields.
 
-## Installation
+Migration: replace `SHDmedian_approx(X, center, ...)` with
+`SHDmedian(X, method = "approx", center = center, ...)`. Replace old exact
+calls with `SHDmedian(X, method = "exact", ...)`, renaming `mu` to `center`.
+The former approximate function and its separate result class are removed.
 
-You can install the development version of SHDmedian like so:
-
-``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
-```
-
-## Example
-
-This is a basic example which shows you how to solve a common problem:
-
-```{r example}
-library(SHDmedian)
-## basic example code
-```
-
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
-
-```{r cars}
-summary(cars)
-```
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+The implementation separates shared validation, centering, and result handling
+from `shd_approx()` and dimension-specific exact backends. A future 3D exact
+algorithm can be added to `shd_exact_backend()` without changing the public API.
+See `doc/approximate-median.md` for numerical details and `benchmarks/approx.R`
+for reproducible comparisons.

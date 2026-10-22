@@ -64,3 +64,13 @@ as_center_vector_d2 <- function(mu, name = "mu") {
 
   mu
 }
+
+# Shared validation for dimension-independent public entry points.
+as_sample_matrix <- function(X) {
+  X <- as.matrix(X)
+  if (!is.numeric(X) || is.complex(X) || length(dim(X)) != 2L ||
+      any(dim(X) == 0L) || any(!is.finite(X)))
+    stop("X must be a nonempty finite numeric matrix.", call. = FALSE)
+  storage.mode(X) <- "double"
+  X
+}

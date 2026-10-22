@@ -1,260 +1,123 @@
-# Main public interface ---------------------------------------------------
-
-#' Compute the bivariate scatter halfspace median
+#' Compute a scatter halfspace median
 #'
-#' `SHDmedian()` computes a scatter halfspace median for bivariate data using
-#' a cutting-plane algorithm. The data are first centered, the complete
-#' projective angular arrangement is constructed, and the deepest nonempty
-#' depth region is found by binary search.
+#' Unified interface to finite-direction SDP optimization in any dimension and
+#' the exact bivariate cutting-plane algorithm. Returns one optimizer, not the
+#' barycenter of the median set.
 #'
-#' The current implementation supports only numeric data with two columns.
+#' @param X Nonempty finite numeric n by d matrix or data frame.
+#' @param method Either `"approx"` (default) or `"exact"`. Exact computation
+#'   currently requires d = 2 and at least two observations.
+#' @param center_method Either `"tukey"` or `"mean"`; ignored when `center` is
+#'   supplied. Tukey centering uses [mrfDepth::hdepthmedian()] with `maxdir = NULL`
+#'   (the sample median in dimension one). Above dimension two this center is
+#'   approximate. If centering fails, supply `center` or use `"mean"`.
+#' @param center Optional finite numeric center vector of length d.
+#' @param U Approximate method: optional d by L matrix of nonzero directions.
+#'   Columns are normalized; no directions are appended. Repeated and antipodal
+#'   columns are permitted.
+#' @param n_directions Approximate method: total automatic directions, at least
+#'   d, including axes. Ignored when `U` is supplied.
+#' @param seed Approximate method: optional seed for automatic directions. The
+#'   RNG state at direction generation is restored afterwards. This does not
+#'   seed Tukey centering. Without a seed, directions consume the ordinary RNG.
+#' @param domain Either `"pd"` or `"psd"`. NULL selects `"pd"` for approximation
+#'   and `"psd"` for exact computation. Exact currently supports only `"psd"`.
+#'   Approximate PD requires a validated strictly positive eigenvalue margin.
+#' @param solver Exact method: solver name recognized by [CVXR::psolve()].
+#' @param initial_directions Exact method: positive number of initial directions.
+#' @param cuts_per_iteration Exact method: maximum cuts added per iteration.
+#' @param max_iterations Exact method: maximum iterations per depth level.
+#' @param separation_tol Exact method: nonnegative relative oracle tolerance.
+#' @param control Approximate method: named list with `abs_tol`, `rel_tol`,
+#'   `pd_tol` (defaults 1e-8), `reuse` (TRUE), `kernel` (`"cpp"` or `"R"`),
+#'   and `solver` (a list of Clarabel settings). Tolerances apply in internally
+#'   scaled scatter units. Explicit solver verbosity overrides `verbose`.
+#' @param verbose Whether to report progress.
 #'
-#' @param X An n x 2 numeric matrix or data frame.
-#' @param center_method Method used to center the observations. Either
-#'   `"tukey"` or `"mean"`.
-#' @param mu An optional fixed center vector of length two. If supplied,
-#'   `center_method` is ignored.
-#' @param solver A solver name recognized by [CVXR::psolve()]. The default is
-#'   `"CLARABEL"`.
-#' @param initial_directions A positive integer giving the requested number
-#'   of initial projective directions.
-#' @param cuts_per_iteration A positive integer giving the maximum number of
-#'   violated cuts added in one cutting-plane iteration.
-#' @param max_iterations A positive integer giving the maximum number of
-#'   cutting-plane iterations at one depth level.
-#' @param separation_tol A nonnegative relative tolerance used by the
-#'   separation oracle.
-#' @param verbose Whether to report preprocessing, level-search, and
-#'   cutting-plane progress.
+#' @details The exact backend constructs the complete projective angular
+#'   arrangement and searches depth levels with a cutting-plane algorithm.
+#'   Certification uses numerical tolerances, not exact arithmetic.
+#'   Approximation optimizes inclusive depth on a fixed finite direction set.
+#'   Its attained depth is an upper bound on full directional depth of the
+#'   returned matrix. A complete finite search does not certify the full optimum.
+#'   Unresolved numerical outcomes preserve supported search bounds.
+#'   Method-specific settings are used only by the corresponding backend.
 #'
-#' @return An object of class `"SHDmedian"` containing:
-#'
-#' - `method`: the computational method;
-#' - `status`: the final search status;
-#' - `certified`: whether the result was certified by the complete angular
-#'   oracle;
-#' - `n`: the sample size;
-#' - `center`: the center used to construct the centered observations;
-#' - `Sigma`: the scatter halfspace median;
-#' - `best_k`: the optimal integer depth count;
-#' - `depth`: `best_k / n`;
-#' - `k_min`, `k_max`: the searched depth bounds;
-#' - `timing`: preprocessing, optimization, and total elapsed times;
-#' - `search_details`: detailed level-search diagnostics.
+#' @return An object of class `"SHDmedian"` with shared fields `method`
+#'   (`"approx"` or `"exact"`), `algorithm`, `status`, `certified`, `n`, `d`,
+#'   `center`, `center_method`, `Sigma`, `best_k`, `depth`, `k_min`, `k_max`,
+#'   `search_bounds`, and `timing` (including `center` and `total` in seconds).
+#'   For approximation, `best_k` is the selected count and `depth` is the raw
+#'   attained finite-direction depth (`depth_U`); these can differ under boundary
+#'   ambiguity. `certified` is always FALSE for approximation. Exact results may
+#'   have unavailable `Sigma` or `best_k`. Exact diagnostics are in `search_details`.
+#'   Approximation retains `U`, `domain`, `selected_k`, `attained_k`, `depth_U`,
+#'   `levels`, raw and tolerance-expanded counts, eigenvalue and constraint
+#'   diagnostics, `tolerances`, `scaling`, and `solver` metadata. For exact results,
+#'   `search_bounds` contains the initial search interval; for approximation it
+#'   contains the final supported optimum bracket.
 #'
 #' @examples
-#' \dontrun{
-#' set.seed(1)
-#' X <- matrix(rnorm(40), ncol = 2)
-#'
-#' result <- SHDmedian(
-#'   X,
-#'   center_method = "mean",
-#'   verbose = TRUE
-#' )
-#'
-#' print(result)
+#' if (requireNamespace("clarabel", quietly = TRUE)) {
+#'   X <- matrix(c(-3, -2, -1, 1, 2, 3))
+#'   fit <- SHDmedian(X, center = 0, U = matrix(1))
+#'   print(fit)
 #' }
-#'
+#' \dontrun{
+#' X <- matrix(rnorm(60), ncol = 2)
+#' fit <- SHDmedian(X, method = "exact", center_method = "mean")
+#' X3 <- matrix(rnorm(90), ncol = 3)
+#' fit3 <- SHDmedian(X3, center_method = "mean", n_directions = 100, seed = 42)
+#' }
 #' @export
-SHDmedian <- function(
-    X,
-    center_method = c("tukey", "mean"),
-    mu = NULL,
-    solver = "CLARABEL",
-    initial_directions = 20L,
-    cuts_per_iteration = 10L,
-    max_iterations = 200L,
-    separation_tol = 1e-8,
-    verbose = FALSE) {
-  total_start <- proc.time()[["elapsed"]]
-
-  X <- as_bivariate_matrix_d2(X, "X")
-  center_method <- match.arg(center_method)
-
-  if (
-    !is.character(solver) ||
-    length(solver) != 1L ||
-    is.na(solver) ||
-    !nzchar(solver)
-  ) {
-    stop(
-      "solver must be a nonempty character string.",
-      call. = FALSE
-    )
+SHDmedian <- function(X, method = c("approx", "exact"),
+                      center_method = c("tukey", "mean"), center = NULL,
+                      U = NULL, n_directions = 2000L, seed = NULL, domain = NULL,
+                      solver = "CLARABEL", initial_directions = 20L,
+                      cuts_per_iteration = 10L, max_iterations = 200L,
+                      separation_tol = 1e-8, control = list(), verbose = FALSE) {
+  start <- proc.time()[["elapsed"]]
+  method <- match.arg(method)
+  X <- as_sample_matrix(X)
+  if (!is.logical(verbose) || length(verbose) != 1L || is.na(verbose))
+    stop("verbose must be TRUE or FALSE.", call. = FALSE)
+  # Add future exact dimensions in the dispatcher, independently of this API.
+  backend <- if (method == "approx") shd_approx else shd_exact_backend(ncol(X))
+  if (method == "exact" && nrow(X) < 2L)
+    stop("X must contain at least two observations.", call. = FALSE)
+  if (is.null(domain)) domain <- if (method == "approx") "pd" else "psd"
+  domain <- match.arg(domain, c("pd", "psd"))
+  if (method == "exact" && domain != "psd")
+    stop("The exact method currently supports only domain = 'psd'.", call. = FALSE)
+  centered <- shd_center(X, center_method, center)
+  center_seconds <- proc.time()[["elapsed"]] - start
+  if (method == "approx") {
+    if (is.list(control) && (is.null(control$solver) || is.list(control$solver)) &&
+        is.null(control$solver$verbose)) control$solver$verbose <- verbose
+    result <- backend(X, centered$center, U, n_directions, seed, domain, control)
+    result$best_k <- result$selected_k
+    result$depth <- result$depth_U
+    result$k_min <- unname(result$search_bounds[1L])
+    result$k_max <- unname(result$search_bounds[2L])
+    result$certified <- FALSE
+  } else {
+    result <- backend(X, center = centered$center, solver = solver,
+      initial_directions = initial_directions, cuts_per_iteration = cuts_per_iteration,
+      max_iterations = max_iterations, separation_tol = separation_tol, verbose = verbose)
+    result$search_bounds <- c(lower = result$k_min, upper = result$k_max)
   }
-
-  positive_integer_arguments <- list(
-    initial_directions = initial_directions,
-    cuts_per_iteration = cuts_per_iteration,
-    max_iterations = max_iterations
-  )
-
-  for (argument_name in names(positive_integer_arguments)) {
-    argument_value <-
-      positive_integer_arguments[[argument_name]]
-
-    valid <-
-      is.numeric(argument_value) &&
-      length(argument_value) == 1L &&
-      !is.na(argument_value) &&
-      is.finite(argument_value) &&
-      argument_value == round(argument_value) &&
-      argument_value >= 1L
-
-    if (!valid) {
-      stop(
-        sprintf(
-          "%s must be a positive integer.",
-          argument_name
-        ),
-        call. = FALSE
-      )
-    }
-  }
-
-  initial_directions <- as.integer(
-    initial_directions
-  )
-
-  cuts_per_iteration <- as.integer(
-    cuts_per_iteration
-  )
-
-  max_iterations <- as.integer(
-    max_iterations
-  )
-
-  if (
-    !is.numeric(separation_tol) ||
-    length(separation_tol) != 1L ||
-    is.na(separation_tol) ||
-    !is.finite(separation_tol) ||
-    separation_tol < 0
-  ) {
-    stop(
-      "separation_tol must be a finite nonnegative number.",
-      call. = FALSE
-    )
-  }
-
-  if (
-    !is.logical(verbose) ||
-    length(verbose) != 1L ||
-    is.na(verbose)
-  ) {
-    stop(
-      "verbose must be TRUE or FALSE.",
-      call. = FALSE
-    )
-  }
-
-  n <- nrow(X)
-
-  # Keep internal geometric tolerances fixed in the first package version.
-  angle_tol <- 1e-12
-  duplicate_tol <- 1e-10
-
-  center_start <- proc.time()[["elapsed"]]
-
-  centered <- center_bivariate_data_d2(
-    X = X,
-    method = center_method,
-    mu = mu
-  )
-
-  center_seconds <-
-    proc.time()[["elapsed"]] -
-    center_start
-
-  if (verbose) {
-    message(sprintf(
-      "Centered %d observations using the %s center.",
-      n,
-      centered$method
-    ))
-  }
-
-  arrangement_start <- proc.time()[["elapsed"]]
-
-  arrangement <- angular_arrangement_d2(
-    Y = centered$Y,
-    tol = angle_tol
-  )
-
-  arrangement_seconds <-
-    proc.time()[["elapsed"]] -
-    arrangement_start
-
-  if (verbose) {
-    message(sprintf(
-      paste0(
-        "Constructed %d angular cells from ",
-        "%d unique interior critical angles."
-      ),
-      arrangement$number_of_cells,
-      arrangement$number_of_unique_interior_angles
-    ))
-  }
-
-  # Conservative certified bounds for the current bivariate implementation.
-  k_min <- max(
-    1L,
-    as.integer(ceiling(n / 4))
-  )
-
-  k_max <- as.integer(
-    ceiling(n / 2)
-  )
-
-  search <- search_levels_d2_cutting_plane(
-    arrangement = arrangement,
-    Y = centered$Y,
-    k_min = k_min,
-    k_max = k_max,
-    solver = solver,
-    initial_directions = initial_directions,
-    cuts_per_iteration = cuts_per_iteration,
-    max_iterations = max_iterations,
-    separation_tol = separation_tol,
-    angle_tol = angle_tol,
-    duplicate_tol = duplicate_tol,
-    solver_verbose = FALSE,
-    verbose = verbose
-  )
-
-  total_seconds <-
-    proc.time()[["elapsed"]] -
-    total_start
-
-  timing <- list(
-    center = center_seconds,
-    arrangement = arrangement_seconds,
-    preprocessing =
-      center_seconds + arrangement_seconds,
-    search = search$elapsed_seconds,
-    total = total_seconds
-  )
-
-  result <- list(
-    method = "cutting-plane",
-    status = search$status,
-    certified = isTRUE(search$certified),
-    n = n,
-    center = centered$mu,
-    Sigma = search$Sigma,
-    best_k = search$best_k,
-    depth = search$depth,
-    k_min = k_min,
-    k_max = k_max,
-    timing = timing,
-    search_details = search
-  )
-
-  class(result) <- c(
-    "SHDmedian",
-    "list"
-  )
-
+  result$algorithm <- result$method
+  result$method <- method
+  result$d <- ncol(X)
+  result$center_method <- centered$method
+  result$timing$preprocessing <- result$timing$preprocessing + center_seconds
+  result$timing$center <- center_seconds
+  result$timing$total <- proc.time()[["elapsed"]] - start
+  class(result) <- c("SHDmedian", "list")
   result
+}
+
+shd_exact_backend <- function(d) {
+  switch(as.character(d), `2` = shd_exact_d2,
+    stop("method = 'exact' currently requires exactly two columns.", call. = FALSE))
 }

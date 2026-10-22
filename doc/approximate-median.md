@@ -1,26 +1,23 @@
 # Finite-direction scatter halfspace median
 
-`SHDmedian_approx()` solves the finite-direction problem for a supplied fixed
-center in any positive dimension. It returns one maximizing scatter matrix,
-subject to its reported numerical bracket. It does not compute the barycenter
-of a median set. The existing bivariate `SHDmedian()` API, centering convention,
-cutting-plane optimization, and complete angular oracle are unchanged.
+`SHDmedian(method = "approx")` solves the finite-direction problem in any
+positive dimension. It returns one optimizing matrix, subject to its numerical
+bracket. Use `method = "exact"` for the bivariate cutting-plane algorithm.
 
 ```r
 library(SHDmedian)
 set.seed(1)
 X <- matrix(rnorm(300), 100, 3)
-fit <- SHDmedian_approx(X, center = rep(0, 3), n_directions = 200, seed = 42)
+fit <- SHDmedian(X, center = rep(0, 3), n_directions = 200, seed = 42)
 fit$Sigma
 fit$depth_U
 fit$search_bounds
 fit$status
 ```
 
-The fixed center is required, including in dimension two. To use the package's
-existing Tukey convention, compute that center first with
-`mrfDepth::hdepthmedian(X, maxdir = NULL)$median` for bivariate X and pass it
-explicitly. No higher-dimensional location estimator is selected implicitly.
+Both methods accept `center` directly, or compute it with
+`center_method = "tukey"` (default) or `center_method = "mean"`.
+Above dimension two the Tukey center is itself approximate.
 Empty samples and zero-dimensional matrices are rejected; one observation and
 dimension one are supported. Inputs must be real finite numeric matrices.
 

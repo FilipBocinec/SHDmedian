@@ -2,85 +2,111 @@
 % Please edit documentation in R/SHDmedian.R
 \name{SHDmedian}
 \alias{SHDmedian}
-\title{Compute the bivariate scatter halfspace median}
+\title{Compute a scatter halfspace median}
 \usage{
 SHDmedian(
   X,
+  method = c("approx", "exact"),
   center_method = c("tukey", "mean"),
-  mu = NULL,
+  center = NULL,
+  U = NULL,
+  n_directions = 2000L,
+  seed = NULL,
+  domain = NULL,
   solver = "CLARABEL",
   initial_directions = 20L,
   cuts_per_iteration = 10L,
   max_iterations = 200L,
   separation_tol = 1e-08,
+  control = list(),
   verbose = FALSE
 )
 }
 \arguments{
-\item{X}{An n x 2 numeric matrix or data frame.}
+\item{X}{Nonempty finite numeric n by d matrix or data frame.}
 
-\item{center_method}{Method used to center the observations. Either
-\code{"tukey"} or \code{"mean"}.}
+\item{method}{Either \code{"approx"} (default) or \code{"exact"}. Exact computation
+currently requires d = 2 and at least two observations.}
 
-\item{mu}{An optional fixed center vector of length two. If supplied,
-\code{center_method} is ignored.}
+\item{center_method}{Either \code{"tukey"} or \code{"mean"}; ignored when \code{center} is
+supplied. Tukey centering uses \code{\link[mrfDepth:hdepthmedian]{mrfDepth::hdepthmedian()}} with \code{maxdir = NULL}
+(the sample median in dimension one). Above dimension two this center is
+approximate. If centering fails, supply \code{center} or use \code{"mean"}.}
 
-\item{solver}{A solver name recognized by \code{\link[CVXR:psolve]{CVXR::psolve()}}. The default is
-\code{"CLARABEL"}.}
+\item{center}{Optional finite numeric center vector of length d.}
 
-\item{initial_directions}{A positive integer giving the requested number
-of initial projective directions.}
+\item{U}{Approximate method: optional d by L matrix of nonzero directions.
+Columns are normalized; no directions are appended. Repeated and antipodal
+columns are permitted.}
 
-\item{cuts_per_iteration}{A positive integer giving the maximum number of
-violated cuts added in one cutting-plane iteration.}
+\item{n_directions}{Approximate method: total automatic directions, at least
+d, including axes. Ignored when \code{U} is supplied.}
 
-\item{max_iterations}{A positive integer giving the maximum number of
-cutting-plane iterations at one depth level.}
+\item{seed}{Approximate method: optional seed for automatic directions. The
+RNG state at direction generation is restored afterwards. This does not
+seed Tukey centering. Without a seed, directions consume the ordinary RNG.}
 
-\item{separation_tol}{A nonnegative relative tolerance used by the
-separation oracle.}
+\item{domain}{Either \code{"pd"} or \code{"psd"}. NULL selects \code{"pd"} for approximation
+and \code{"psd"} for exact computation. Exact currently supports only \code{"psd"}.
+Approximate PD requires a validated strictly positive eigenvalue margin.}
 
-\item{verbose}{Whether to report preprocessing, level-search, and
-cutting-plane progress.}
+\item{solver}{Exact method: solver name recognized by \code{\link[CVXR:psolve]{CVXR::psolve()}}.}
+
+\item{initial_directions}{Exact method: positive number of initial directions.}
+
+\item{cuts_per_iteration}{Exact method: maximum cuts added per iteration.}
+
+\item{max_iterations}{Exact method: maximum iterations per depth level.}
+
+\item{separation_tol}{Exact method: nonnegative relative oracle tolerance.}
+
+\item{control}{Approximate method: named list with \code{abs_tol}, \code{rel_tol},
+\code{pd_tol} (defaults 1e-8), \code{reuse} (TRUE), \code{kernel} (\code{"cpp"} or \code{"R"}),
+and \code{solver} (a list of Clarabel settings). Tolerances apply in internally
+scaled scatter units. Explicit solver verbosity overrides \code{verbose}.}
+
+\item{verbose}{Whether to report progress.}
 }
 \value{
-An object of class \code{"SHDmedian"} containing:
-\itemize{
-\item \code{method}: the computational method;
-\item \code{status}: the final search status;
-\item \code{certified}: whether the result was certified by the complete angular
-oracle;
-\item \code{n}: the sample size;
-\item \code{center}: the center used to construct the centered observations;
-\item \code{Sigma}: the scatter halfspace median;
-\item \code{best_k}: the optimal integer depth count;
-\item \code{depth}: \code{best_k / n};
-\item \code{k_min}, \code{k_max}: the searched depth bounds;
-\item \code{timing}: preprocessing, optimization, and total elapsed times;
-\item \code{search_details}: detailed level-search diagnostics.
-}
+An object of class \code{"SHDmedian"} with shared fields \code{method}
+(\code{"approx"} or \code{"exact"}), \code{algorithm}, \code{status}, \code{certified}, \code{n}, \code{d},
+\code{center}, \code{center_method}, \code{Sigma}, \code{best_k}, \code{depth}, \code{k_min}, \code{k_max},
+\code{search_bounds}, and \code{timing} (including \code{center} and \code{total} in seconds).
+For approximation, \code{best_k} is the selected count and \code{depth} is the raw
+attained finite-direction depth (\code{depth_U}); these can differ under boundary
+ambiguity. \code{certified} is always FALSE for approximation. Exact results may
+have unavailable \code{Sigma} or \code{best_k}. Exact diagnostics are in \code{search_details}.
+Approximation retains \code{U}, \code{domain}, \code{selected_k}, \code{attained_k}, \code{depth_U},
+\code{levels}, raw and tolerance-expanded counts, eigenvalue and constraint
+diagnostics, \code{tolerances}, \code{scaling}, and \code{solver} metadata. For exact results,
+\code{search_bounds} contains the initial search interval; for approximation it
+contains the final supported optimum bracket.
 }
 \description{
-\code{SHDmedian()} computes a scatter halfspace median for bivariate data using
-a cutting-plane algorithm. The data are first centered, the complete
-projective angular arrangement is constructed, and the deepest nonempty
-depth region is found by binary search.
+Unified interface to finite-direction SDP optimization in any dimension and
+the exact bivariate cutting-plane algorithm. Returns one optimizer, not the
+barycenter of the median set.
 }
 \details{
-The current implementation supports only numeric data with two columns.
+The exact backend constructs the complete projective angular
+arrangement and searches depth levels with a cutting-plane algorithm.
+Certification uses numerical tolerances, not exact arithmetic.
+Approximation optimizes inclusive depth on a fixed finite direction set.
+Its attained depth is an upper bound on full directional depth of the
+returned matrix. A complete finite search does not certify the full optimum.
+Unresolved numerical outcomes preserve supported search bounds.
+Method-specific settings are used only by the corresponding backend.
 }
 \examples{
-\dontrun{
-set.seed(1)
-X <- matrix(rnorm(40), ncol = 2)
-
-result <- SHDmedian(
-  X,
-  center_method = "mean",
-  verbose = TRUE
-)
-
-print(result)
+if (requireNamespace("clarabel", quietly = TRUE)) {
+  X <- matrix(c(-3, -2, -1, 1, 2, 3))
+  fit <- SHDmedian(X, center = 0, U = matrix(1))
+  print(fit)
 }
-
+\dontrun{
+X <- matrix(rnorm(60), ncol = 2)
+fit <- SHDmedian(X, method = "exact", center_method = "mean")
+X3 <- matrix(rnorm(90), ncol = 3)
+fit3 <- SHDmedian(X3, center_method = "mean", n_directions = 100, seed = 42)
+}
 }

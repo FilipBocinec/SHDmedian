@@ -36,7 +36,7 @@ separation oracle. Its public inputs and results remain unchanged.
 5. Added generated help, mathematical/numerical documentation, executable
    examples, regression tests and reproducible benchmarks with saved diagnostics.
 
-Changed implementation files: `R/SHDmedian_approx.R`, `R/approx-kernels.R`,
+Changed implementation files: `R/approx.R`, `R/approx-kernels.R`,
 `R/approx-solver.R`, `src/approx_kernels.cpp`, generated Rcpp exports,
 `src/Makevars`, `src/Makevars.win`, DESCRIPTION and generated NAMESPACE.
 Package documentation metadata and README gained approximation information;
