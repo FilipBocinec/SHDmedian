@@ -1,7 +1,7 @@
 #' Compute a scatter halfspace median
 #'
 #' Unified interface to finite-direction SDP optimization in any dimension and
-#' the exact bivariate cutting-plane algorithm. Returns one optimizer, not the
+#' the exact bivariate point-based SOCP algorithm. Returns one optimizer, not the
 #' barycenter of the median set.
 #'
 #' @param X Nonempty finite numeric n by d matrix or data frame.
@@ -21,21 +21,24 @@
 #'   RNG state at direction generation is restored afterwards. This does not
 #'   seed Tukey centering. Without a seed, directions consume the ordinary RNG.
 #' @param domain Either `"pd"` or `"psd"`. NULL selects `"pd"` for approximation
-#'   and `"psd"` for exact computation. Exact currently supports only `"psd"`.
+#'   and for exact computation. Exact currently supports only `"pd"`.
 #'   Approximate PD requires a validated strictly positive eigenvalue margin.
-#' @param solver Exact method: solver name recognized by [CVXR::psolve()].
-#' @param initial_directions Exact method: positive number of initial directions.
-#' @param cuts_per_iteration Exact method: maximum cuts added per iteration.
-#' @param max_iterations Exact method: maximum iterations per depth level.
-#' @param separation_tol Exact method: nonnegative relative oracle tolerance.
+#' @param solver Exact method: only `"CLARABEL"` is supported.
+#' @param initial_directions,cuts_per_iteration,max_iterations,separation_tol
+#'   Legacy cutting-plane settings, validated but unused by SOCP.
 #' @param control Approximate method: named list with `abs_tol`, `rel_tol`,
 #'   `pd_tol` (defaults 1e-8), `reuse` (TRUE), `kernel` (`"cpp"` or `"R"`),
 #'   and `solver` (a list of Clarabel settings). Tolerances apply in internally
 #'   scaled scatter units. Explicit solver verbosity overrides `verbose`.
 #' @param verbose Whether to report progress.
 #'
-#' @details The exact backend constructs the complete projective angular
-#'   arrangement and searches depth levels with a cutting-plane algorithm.
+#' @details The exact backend uses per-observation angular sweeps, sparse SOCP
+#'   models and binary depth search. Its `control` accepts `cache_geometry`
+#'   (TRUE, FALSE or `"auto"`), `cache_limit_mb` (256), `angle_tol` (1e-12),
+#'   `solver_tol` (1e-9), `validation_tol` (1e-7), `pd_tol` (1e-9), and
+#'   `solver` (a list of Clarabel settings). Singular boundary cases can remain
+#'   unresolved. `search_details` includes strict depth, level diagnostics,
+#'   numerical bounds, tolerances and component timings.
 #'   Certification uses numerical tolerances, not exact arithmetic.
 #'   Approximation optimizes inclusive depth on a fixed finite direction set.
 #'   Its attained depth is an upper bound on full directional depth of the
@@ -54,7 +57,7 @@
 #'   Approximation retains `U`, `domain`, `selected_k`, `attained_k`, `depth_U`,
 #'   `levels`, raw and tolerance-expanded counts, eigenvalue and constraint
 #'   diagnostics, `tolerances`, `scaling`, and `solver` metadata. For exact results,
-#'   `search_bounds` contains the initial search interval; for approximation it
+#'   `search_bounds` contains the final supported optimum bracket; for approximation it
 #'   contains the final supported optimum bracket.
 #'
 #' @examples
@@ -85,10 +88,10 @@ SHDmedian <- function(X, method = c("approx", "exact"),
   backend <- if (method == "approx") shd_approx else shd_exact_backend(ncol(X))
   if (method == "exact" && nrow(X) < 2L)
     stop("X must contain at least two observations.", call. = FALSE)
-  if (is.null(domain)) domain <- if (method == "approx") "pd" else "psd"
+  if (is.null(domain)) domain <- "pd"
   domain <- match.arg(domain, c("pd", "psd"))
-  if (method == "exact" && domain != "psd")
-    stop("The exact method currently supports only domain = 'psd'.", call. = FALSE)
+  if (method == "exact" && domain != "pd")
+    stop("The exact method currently supports only domain = 'pd'.", call. = FALSE)
   centered <- shd_center(X, center_method, center)
   center_seconds <- proc.time()[["elapsed"]] - start
   if (method == "approx") {
@@ -103,7 +106,7 @@ SHDmedian <- function(X, method = c("approx", "exact"),
   } else {
     result <- backend(X, center = centered$center, solver = solver,
       initial_directions = initial_directions, cuts_per_iteration = cuts_per_iteration,
-      max_iterations = max_iterations, separation_tol = separation_tol, verbose = verbose)
+      max_iterations = max_iterations, separation_tol = separation_tol, verbose = verbose, control = control)
     result$search_bounds <- c(lower = result$k_min, upper = result$k_max)
   }
   result$algorithm <- result$method

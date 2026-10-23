@@ -35,12 +35,12 @@ test_that("SHDmedian returns the requested structure", {
       "k_min",
       "k_max",
       "timing",
-      "search_details", "search_bounds", "algorithm", "d", "center_method"
+      "search_details", "domain", "search_bounds", "algorithm", "d", "center_method"
     )
   )
 
   expect_equal(result$method, "exact")
-  expect_equal(result$status, "optimal")
+  expect_equal(result$status, "resolved_numerically")
   expect_true(result$certified)
   expect_equal(result$n, nrow(X))
   expect_equal(result$center, colMeans(X))
@@ -52,12 +52,12 @@ test_that("SHDmedian returns the requested structure", {
 
   expect_equal(
     result$k_min,
-    ceiling(nrow(X) / 4)
+    result$best_k
   )
 
   expect_equal(
     result$k_max,
-    as.integer(ceiling(nrow(X) / 2))
+    result$best_k
   )
   expect_false(is.null(result$Sigma))
 
@@ -78,11 +78,11 @@ test_that("SHDmedian returns the requested structure", {
   expect_named(
     result$timing,
     c(
-      "center",
-      "arrangement",
       "preprocessing",
+      "geometry",
       "search",
-      "total"
+      "total",
+      "center"
     )
   )
 

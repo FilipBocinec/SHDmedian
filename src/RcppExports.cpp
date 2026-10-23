@@ -49,11 +49,67 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// shd_socp_prepare_cpp
+Rcpp::List shd_socp_prepare_cpp(Rcpp::NumericMatrix Y, bool cache, double angle_tol);
+RcppExport SEXP _SHDmedian_shd_socp_prepare_cpp(SEXP YSEXP, SEXP cacheSEXP, SEXP angle_tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< bool >::type cache(cacheSEXP);
+    Rcpp::traits::input_parameter< double >::type angle_tol(angle_tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(shd_socp_prepare_cpp(Y, cache, angle_tol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// shd_socp_model_cpp
+Rcpp::List shd_socp_model_cpp(SEXP geometry_ptr, int k, double scale);
+RcppExport SEXP _SHDmedian_shd_socp_model_cpp(SEXP geometry_ptrSEXP, SEXP kSEXP, SEXP scaleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type geometry_ptr(geometry_ptrSEXP);
+    Rcpp::traits::input_parameter< int >::type k(kSEXP);
+    Rcpp::traits::input_parameter< double >::type scale(scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(shd_socp_model_cpp(geometry_ptr, k, scale));
+    return rcpp_result_gen;
+END_RCPP
+}
+// shd_socp_validate_cpp
+Rcpp::List shd_socp_validate_cpp(SEXP level_ptr, Rcpp::NumericMatrix Sigma);
+RcppExport SEXP _SHDmedian_shd_socp_validate_cpp(SEXP level_ptrSEXP, SEXP SigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type level_ptr(level_ptrSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Sigma(SigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(shd_socp_validate_cpp(level_ptr, Sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
+// shd_depth_point_cpp
+Rcpp::List shd_depth_point_cpp(Rcpp::NumericMatrix Y, Rcpp::NumericMatrix Sigma, double tolerance, double angle_tol);
+RcppExport SEXP _SHDmedian_shd_depth_point_cpp(SEXP YSEXP, SEXP SigmaSEXP, SEXP toleranceSEXP, SEXP angle_tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Sigma(SigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type angle_tol(angle_tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(shd_depth_point_cpp(Y, Sigma, tolerance, angle_tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_SHDmedian_angular_arrangement_d2_cpp", (DL_FUNC) &_SHDmedian_angular_arrangement_d2_cpp, 2},
     {"_SHDmedian_shd_prepare_cpp", (DL_FUNC) &_SHDmedian_shd_prepare_cpp, 2},
     {"_SHDmedian_shd_verify_cpp", (DL_FUNC) &_SHDmedian_shd_verify_cpp, 4},
+    {"_SHDmedian_shd_socp_prepare_cpp", (DL_FUNC) &_SHDmedian_shd_socp_prepare_cpp, 3},
+    {"_SHDmedian_shd_socp_model_cpp", (DL_FUNC) &_SHDmedian_shd_socp_model_cpp, 3},
+    {"_SHDmedian_shd_socp_validate_cpp", (DL_FUNC) &_SHDmedian_shd_socp_validate_cpp, 2},
+    {"_SHDmedian_shd_depth_point_cpp", (DL_FUNC) &_SHDmedian_shd_depth_point_cpp, 4},
     {NULL, NULL, 0}
 };
 

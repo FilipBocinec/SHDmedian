@@ -10,7 +10,7 @@ devtools::install_github("FilipBocinec/SHDmedian")
 library(SHDmedian)
 ```
 
-For the approximate method, also install the optional solver:
+For either method, also install the optional solver:
 
 ```r
 install.packages("clarabel")
@@ -28,7 +28,7 @@ The package contains C++ code, so installation requires compilation tools
 fit <- SHDmedian(X, method = "approx", center_method = "mean",
                  n_directions = 200, seed = 42)
 
-# Exact bivariate cutting-plane algorithm.
+# Exact bivariate point-based SOCP algorithm.
 fit2 <- SHDmedian(X2, method = "exact", center_method = "tukey")
 
 # A supplied center overrides center_method for either method.
@@ -48,15 +48,15 @@ uncertainty. A complete approximate search is not a full-direction certificate.
 The returned matrix is one optimizer, not a barycenter of the median set.
 
 Approximation defaults to positive definite matrices (`domain = "pd"`),
-with `domain = "psd"` also available. Exact computation currently supports
-only the positive semidefinite domain, which is its default. Exact results
-use the complete bivariate angular oracle under numerical tolerances.
-The approximate method requires the optional `clarabel` package.
+with `domain = "psd"` also available. Exact computation supports only positive definite matrices, also its default.
+Its SOCP formulation is exact in real arithmetic; numerical certification uses
+tolerances, and singular boundary cases may remain unresolved.
+Both methods require the optional `clarabel` package.
 
 Approximate settings include `U`, `n_directions`, `seed`, and `control`
 (tolerances, kernel, model reuse, and Clarabel settings). Exact settings include
-`solver`, `initial_directions`, `cuts_per_iteration`, `max_iterations`, and
-`separation_tol`. See `?SHDmedian` for all arguments and output fields.
+`solver = "CLARABEL"` and `control` (geometry caching, tolerances, and Clarabel
+settings). Former cutting-plane arguments are retained but unused. See `?SHDmedian` for all arguments and output fields.
 
 Migration: replace `SHDmedian_approx(X, center, ...)` with
 `SHDmedian(X, method = "approx", center = center, ...)`. Replace old exact
@@ -68,3 +68,5 @@ from `shd_approx()` and dimension-specific exact backends. A future 3D exact
 algorithm can be added to `shd_exact_backend()` without changing the public API.
 See `doc/approximate-median.md` for numerical details and `benchmarks/approx.R`
 for reproducible comparisons.
+
+See `doc/exact-socp.md` for the exact SOCP formulation and diagnostics.

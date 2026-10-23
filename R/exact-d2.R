@@ -6,7 +6,7 @@ shd_exact_d2 <- function(
     cuts_per_iteration = 10L,
     max_iterations = 200L,
     separation_tol = 1e-8,
-    verbose = FALSE) {
+    verbose = FALSE, control = list()) {
   total_start <- proc.time()[["elapsed"]]
 
   X <- as_bivariate_matrix_d2(X, "X")
@@ -89,109 +89,27 @@ shd_exact_d2 <- function(
     )
   }
 
-  n <- nrow(X)
-
-  # Keep internal geometric tolerances fixed in the first package version.
-  angle_tol <- 1e-12
-  duplicate_tol <- 1e-10
-
-  center_start <- proc.time()[["elapsed"]]
-
-  centered <- list(mu = center, Y = sweep(X, 2L, center, "-"))
-  if (any(!is.finite(centered$Y)))
-    stop("Centering overflowed; rescale X and center.", call. = FALSE)
-
-  center_seconds <-
-    proc.time()[["elapsed"]] -
-    center_start
-
-  if (verbose) {
-    message(sprintf(
-      "Prepared %d centered observations.",
-      n
-    ))
-  }
-
-  arrangement_start <- proc.time()[["elapsed"]]
-
-  arrangement <- angular_arrangement_d2(
-    Y = centered$Y,
-    tol = angle_tol
-  )
-
-  arrangement_seconds <-
-    proc.time()[["elapsed"]] -
-    arrangement_start
-
-  if (verbose) {
-    message(sprintf(
-      paste0(
-        "Constructed %d angular cells from ",
-        "%d unique interior critical angles."
-      ),
-      arrangement$number_of_cells,
-      arrangement$number_of_unique_interior_angles
-    ))
-  }
-
-  # Conservative certified bounds for the current bivariate implementation.
-  k_min <- max(
-    1L,
-    as.integer(ceiling(n / 4))
-  )
-
-  k_max <- as.integer(
-    ceiling(n / 2)
-  )
-
-  search <- search_levels_d2_cutting_plane(
-    arrangement = arrangement,
-    Y = centered$Y,
-    k_min = k_min,
-    k_max = k_max,
-    solver = solver,
-    initial_directions = initial_directions,
-    cuts_per_iteration = cuts_per_iteration,
-    max_iterations = max_iterations,
-    separation_tol = separation_tol,
-    angle_tol = angle_tol,
-    duplicate_tol = duplicate_tol,
-    solver_verbose = FALSE,
-    verbose = verbose
-  )
-
-  total_seconds <-
-    proc.time()[["elapsed"]] -
-    total_start
-
-  timing <- list(
-    center = center_seconds,
-    arrangement = arrangement_seconds,
-    preprocessing =
-      center_seconds + arrangement_seconds,
-    search = search$elapsed_seconds,
-    total = total_seconds
-  )
-
-  result <- list(
-    method = "cutting-plane",
-    status = search$status,
-    certified = isTRUE(search$certified),
-    n = n,
-    center = centered$mu,
-    Sigma = search$Sigma,
-    best_k = search$best_k,
-    depth = search$depth,
-    k_min = k_min,
-    k_max = k_max,
-    timing = timing,
-    search_details = search
-  )
-
-  class(result) <- c(
-    "SHDmedian",
-    "list"
-  )
-
-  result
+  if (toupper(solver) != "CLARABEL")
+    stop("The exact SOCP method requires solver = 'CLARABEL'.", call. = FALSE)
+  allowed <- c("cache_geometry", "cache_limit_mb", "angle_tol", "solver_tol",
+               "validation_tol", "pd_tol", "solver")
+  if (!is.list(control) || (length(control) &&
+      (is.null(names(control)) || any(!names(control) %in% allowed))))
+    stop("Unknown exact control setting.", call. = FALSE)
+  args <- control
+  settings <- args[["solver", exact = TRUE]]
+  if (!is.null(settings) && !is.list(settings))
+    stop("control$solver must be a list of Clarabel settings.", call. = FALSE)
+  args[["solver"]] <- NULL
+  args[["control"]] <- if (is.null(settings)) list() else settings
+  fit <- do.call(SHDmedian_socp, c(list(X = X, mu = center, verbose = verbose), args))
+  list(method = "point-based-socp", status = fit$status, certified = fit$certified,
+       n = fit$n, center = fit$mu, Sigma = fit$Sigma, best_k = fit$k,
+       depth = fit$depth, k_min = unname(fit$k_interval[1L]),
+       k_max = unname(fit$k_interval[2L]),
+       timing = list(preprocessing = unname(fit$timing["geometry"]),
+                     geometry = unname(fit$timing["geometry"]),
+                     search = unname(sum(fit$timing[c("build", "solver", "validation")])),
+                     total = proc.time()[["elapsed"]] - total_start),
+       search_details = fit, domain = "pd")
 }

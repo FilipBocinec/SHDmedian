@@ -13,3 +13,19 @@ shd_verify_cpp <- function(Sigma, U, Q, tolerance = 0) {
     .Call(`_SHDmedian_shd_verify_cpp`, Sigma, U, Q, tolerance)
 }
 
+shd_socp_prepare_cpp <- function(Y, cache = TRUE, angle_tol = 1e-12) {
+    .Call(`_SHDmedian_shd_socp_prepare_cpp`, Y, cache, angle_tol)
+}
+
+shd_socp_model_cpp <- function(geometry_ptr, k, scale = 1) {
+    .Call(`_SHDmedian_shd_socp_model_cpp`, geometry_ptr, k, scale)
+}
+
+shd_socp_validate_cpp <- function(level_ptr, Sigma) {
+    .Call(`_SHDmedian_shd_socp_validate_cpp`, level_ptr, Sigma)
+}
+
+shd_depth_point_cpp <- function(Y, Sigma, tolerance = 0, angle_tol = 1e-13) {
+    .Call(`_SHDmedian_shd_depth_point_cpp`, Y, Sigma, tolerance, angle_tol)
+}
+

@@ -47,18 +47,12 @@ RNG state at direction generation is restored afterwards. This does not
 seed Tukey centering. Without a seed, directions consume the ordinary RNG.}
 
 \item{domain}{Either \code{"pd"} or \code{"psd"}. NULL selects \code{"pd"} for approximation
-and \code{"psd"} for exact computation. Exact currently supports only \code{"psd"}.
+and for exact computation. Exact currently supports only \code{"pd"}.
 Approximate PD requires a validated strictly positive eigenvalue margin.}
 
-\item{solver}{Exact method: solver name recognized by \code{\link[CVXR:psolve]{CVXR::psolve()}}.}
+\item{solver}{Exact method: only \code{"CLARABEL"} is supported.}
 
-\item{initial_directions}{Exact method: positive number of initial directions.}
-
-\item{cuts_per_iteration}{Exact method: maximum cuts added per iteration.}
-
-\item{max_iterations}{Exact method: maximum iterations per depth level.}
-
-\item{separation_tol}{Exact method: nonnegative relative oracle tolerance.}
+\item{initial_directions, cuts_per_iteration, max_iterations, separation_tol}{Legacy cutting-plane settings, validated but unused by SOCP.}
 
 \item{control}{Approximate method: named list with \code{abs_tol}, \code{rel_tol},
 \code{pd_tol} (defaults 1e-8), \code{reuse} (TRUE), \code{kernel} (\code{"cpp"} or \code{"R"}),
@@ -79,17 +73,22 @@ have unavailable \code{Sigma} or \code{best_k}. Exact diagnostics are in \code{s
 Approximation retains \code{U}, \code{domain}, \code{selected_k}, \code{attained_k}, \code{depth_U},
 \code{levels}, raw and tolerance-expanded counts, eigenvalue and constraint
 diagnostics, \code{tolerances}, \code{scaling}, and \code{solver} metadata. For exact results,
-\code{search_bounds} contains the initial search interval; for approximation it
+\code{search_bounds} contains the final supported optimum bracket; for approximation it
 contains the final supported optimum bracket.
 }
 \description{
 Unified interface to finite-direction SDP optimization in any dimension and
-the exact bivariate cutting-plane algorithm. Returns one optimizer, not the
+the exact bivariate point-based SOCP algorithm. Returns one optimizer, not the
 barycenter of the median set.
 }
 \details{
-The exact backend constructs the complete projective angular
-arrangement and searches depth levels with a cutting-plane algorithm.
+The exact backend uses per-observation angular sweeps, sparse SOCP
+models and binary depth search. Its \code{control} accepts \code{cache_geometry}
+(TRUE, FALSE or \code{"auto"}), \code{cache_limit_mb} (256), \code{angle_tol} (1e-12),
+\code{solver_tol} (1e-9), \code{validation_tol} (1e-7), \code{pd_tol} (1e-9), and
+\code{solver} (a list of Clarabel settings). Singular boundary cases can remain
+unresolved. \code{search_details} includes strict depth, level diagnostics,
+numerical bounds, tolerances and component timings.
 Certification uses numerical tolerances, not exact arithmetic.
 Approximation optimizes inclusive depth on a fixed finite direction set.
 Its attained depth is an upper bound on full directional depth of the

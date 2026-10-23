@@ -2,7 +2,7 @@
 
 `SHDmedian(method = "approx")` solves the finite-direction problem in any
 positive dimension. It returns one optimizing matrix, subject to its numerical
-bracket. Use `method = "exact"` for the bivariate cutting-plane algorithm.
+bracket. Use `method = "exact"` for the bivariate point-based SOCP algorithm.
 
 ```r
 library(SHDmedian)

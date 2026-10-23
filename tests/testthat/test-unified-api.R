@@ -34,9 +34,28 @@ test_that("Tukey centering is shared and a supplied center takes precedence", {
 
 test_that("method dispatch rejects unsupported dimensions and domains", {
   expect_error(SHDmedian(matrix(1, 4, 3), method = "exact"), "two columns")
-  expect_error(SHDmedian(matrix(1, 4, 2), method = "exact", domain = "pd"),
+  expect_error(SHDmedian(matrix(1, 4, 2), method = "exact", domain = "psd"),
                "only domain")
   expect_error(SHDmedian(matrix(1), method = "other"), "arg")
   expect_error(SHDmedian(matrix(1), center = Inf), "center")
   expect_error(SHDmedian(matrix(1), verbose = NA), "verbose")
+})
+
+test_that("exact SOCP dispatch preserves diagnostics and numerical uncertainty", {
+  skip_if_not_installed("clarabel")
+  X <- rbind(c(1, 0), c(-1, 0), c(0, 1), c(0, -3))
+  fit <- SHDmedian(X, method = "exact", center = c(0, 0),
+    control = list(cache_geometry = FALSE, solver_tol = 1e-11, pd_tol = 1e-8))
+  expect_equal(fit$algorithm, "point-based-socp")
+  expect_equal(fit$domain, "pd")
+  expect_equal(fit$best_k, 1L)
+  expect_equal(unname(fit$search_bounds), fit$search_details$k_interval)
+  expect_false(fit$search_details$cache_geometry)
+  if (!fit$certified) expect_equal(fit$status, "unresolved")
+  expect_error(SHDmedian(X, method = "exact", center = c(0, 0),
+    control = list(unknown = TRUE)), "control")
+  expect_error(SHDmedian(X, method = "exact", center = c(0, 0),
+    solver = "SCS"), "CLARABEL")
+  expect_error(SHDmedian(X, method = "exact", center = c(0, 0),
+    control = list(solver_tol = "bad")), "positive")
 })

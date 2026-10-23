@@ -196,7 +196,7 @@ test_that("approximate matrix respects the full 2D angular depth comparison", {
   full_k <- max(c(0,which(passed)))
   expect_lte(full_k,a$attained_k)
   expect_lte(full_k,exact$best_k)
-  expect_equal(exact$status,"optimal")
-  # In the same PSD domain, full-direction optimization cannot beat the U optimum.
+  expect_equal(exact$status,"resolved_numerically")
+  # The full-direction PD optimum cannot beat the finite-direction PSD optimum.
   expect_lte(exact$best_k,a$search_bounds[2])
 })

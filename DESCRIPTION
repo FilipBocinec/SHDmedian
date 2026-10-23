@@ -9,7 +9,7 @@ Authors@R:
         role = c("aut", "cre")
     )
 Description: Computes the scatter halfspace median for bivariate data
-    using a cutting-plane algorithm and an angular separation oracle, and
+    using a point-based second-order cone formulation with angular sweeps, and
     finite-direction approximate scatter medians in arbitrary dimension
     using semidefinite programming with a fixed center.
 License: GPL (>= 3)
