@@ -35,6 +35,9 @@ print.SHDmedian <- function(x, ...) {
 
   if (!is.null(x$Sigma)) {
     cat("Scatter median:\n")
+    if (isTRUE(x$gaussian_consistent))
+      cat(sprintf("Gaussian consistency factor: %.6f (depth refers to Sigma_raw)\n",
+                  x$consistency_factor))
     print(x$Sigma)
   } else {
     cat("Scatter median: unavailable\n")

@@ -31,6 +31,9 @@
 #'   and `solver` (a list of Clarabel settings). Tolerances apply in internally
 #'   scaled scatter units. Explicit solver verbosity overrides `verbose`.
 #' @param verbose Whether to report progress.
+#' @param gaussian_consistent Logical; if TRUE (default), multiply the raw
+#'   scatter median by `1 / stats::qnorm(0.75)^2` for Gaussian consistency.
+#'   Set FALSE to return the unscaled scatter median in `Sigma`.
 #'
 #' @details The exact backend uses per-observation angular sweeps, sparse SOCP
 #'   models and binary depth search. Its `control` accepts `cache_geometry`
@@ -42,9 +45,15 @@
 #'   Certification uses numerical tolerances, not exact arithmetic.
 #'   Approximation optimizes inclusive depth on a fixed finite direction set.
 #'   Its attained depth is an upper bound on full directional depth of the
-#'   returned matrix. A complete finite search does not certify the full optimum.
+#'   raw median matrix. A complete finite search does not certify the full optimum.
 #'   Unresolved numerical outcomes preserve supported search bounds.
 #'   Method-specific settings are used only by the corresponding backend.
+#'   For a Gaussian population with covariance V and the true center, every
+#'   squared standardized projection has median `stats::qnorm(0.75)^2`.
+#'   Thus the population scatter halfspace median is this constant times V.
+#'   Gaussian scaling corrects this population factor; it is not a finite-sample
+#'   unbiasedness correction. Depths, certification and all backend diagnostics
+#'   refer to `Sigma_raw`, before Gaussian scaling.
 #'
 #' @return An object of class `"SHDmedian"` with shared fields `method`
 #'   (`"approx"` or `"exact"`), `algorithm`, `status`, `certified`, `n`, `d`,
@@ -59,6 +68,10 @@
 #'   diagnostics, `tolerances`, `scaling`, and `solver` metadata. For exact results,
 #'   `search_bounds` contains the final supported optimum bracket; for approximation it
 #'   contains the final supported optimum bracket.
+#'   `Sigma_raw` stores the unscaled scatter median (NULL if unavailable),
+#'   `gaussian_consistent` records the requested correction, and
+#'   `consistency_factor` is the multiplier used to obtain `Sigma` from
+#'   `Sigma_raw` (one when the correction is disabled).
 #'
 #' @examples
 #' if (requireNamespace("clarabel", quietly = TRUE)) {
@@ -78,10 +91,14 @@ SHDmedian <- function(X, method = c("approx", "exact"),
                       U = NULL, n_directions = 2000L, seed = NULL, domain = NULL,
                       solver = "CLARABEL", initial_directions = 20L,
                       cuts_per_iteration = 10L, max_iterations = 200L,
-                      separation_tol = 1e-8, control = list(), verbose = FALSE) {
+                      separation_tol = 1e-8, control = list(), verbose = FALSE,
+                      gaussian_consistent = TRUE) {
   start <- proc.time()[["elapsed"]]
   method <- match.arg(method)
   X <- as_sample_matrix(X)
+  if (!is.logical(gaussian_consistent) || length(gaussian_consistent) != 1L ||
+      is.na(gaussian_consistent))
+    stop("gaussian_consistent must be TRUE or FALSE.", call. = FALSE)
   if (!is.logical(verbose) || length(verbose) != 1L || is.na(verbose))
     stop("verbose must be TRUE or FALSE.", call. = FALSE)
   # Add future exact dimensions in the dispatcher, independently of this API.
@@ -108,6 +125,14 @@ SHDmedian <- function(X, method = c("approx", "exact"),
       initial_directions = initial_directions, cuts_per_iteration = cuts_per_iteration,
       max_iterations = max_iterations, separation_tol = separation_tol, verbose = verbose, control = control)
     result$search_bounds <- c(lower = result$k_min, upper = result$k_max)
+  }
+  result["Sigma_raw"] <- list(result$Sigma)
+  result$gaussian_consistent <- gaussian_consistent
+  result$consistency_factor <- if (gaussian_consistent) 1 / stats::qnorm(0.75)^2 else 1
+  if (!is.null(result$Sigma)) {
+    result$Sigma <- result$Sigma * result$consistency_factor
+    if (any(!is.finite(result$Sigma)))
+      stop("Gaussian-scaled scatter output overflowed; rescale X and center.", call. = FALSE)
   }
   result$algorithm <- result$method
   result$method <- method

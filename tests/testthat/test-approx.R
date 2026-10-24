@@ -65,7 +65,7 @@ test_that("scalar normalization supports representable extreme magnitudes", {
   skip_if_not_installed("clarabel")
   for (scale in c(1e-150,1e150)) {
     a <- SHDmedian(matrix(c(-1,1)*scale), center = 0,U=matrix(1))
-    expect_equal(a$Sigma / scale^2,matrix(1),tolerance=1e-12)
+    expect_equal(a$Sigma_raw / scale^2,matrix(1),tolerance=1e-12)
     expect_equal(a$depth_U,1)
     expect_true(is.finite(a$tolerances$directional))
   }
@@ -78,7 +78,7 @@ test_that("solver handles tied depth above one half and distinguishes PD", {
     a <- SHDmedian(matrix(c(-1,1)), center = 0,U=matrix(c(2,-3),1),control=list(kernel=kernel))
     expect_equal(a$depth_U,1); expect_equal(a$selected_k,2)
     expect_equal(a$search_bounds,c(lower=2,upper=2))
-    expect_equal(a$Sigma,matrix(1),tolerance=1e-12)
+    expect_equal(a$Sigma_raw,matrix(1),tolerance=1e-12)
     pd <- SHDmedian(matrix(0,3,2), center = c(0,0),U=diag(2),control=list(kernel=kernel))
     psd <- SHDmedian(matrix(0,3,2), center = c(0,0),U=diag(2),domain="psd",control=list(kernel=kernel))
     expect_equal(pd$selected_k,0); expect_gt(pd$min_eigenvalue,0)
@@ -99,7 +99,7 @@ test_that("fixed directions respect translation, scaling, signs and RNG", {
   c <- SHDmedian(X, center = rep(0,3),U=-a$U*7,control=list(reuse=FALSE))
   expect_equal(c$search_bounds,a$search_bounds)
   expect_equal(abs(c$U),abs(a$U),tolerance=1e-14)
-  check <- shd_verify_R(a$Sigma,a$U,shd_prepare_R(X,a$U)$Q)
+  check <- shd_verify_R(a$Sigma_raw,a$U,shd_prepare_R(X,a$U)$Q)
   expect_equal(a$attained_k,min(check$lower,check$upper))
   expect_output(print(a),"Finite-direction")
 })
@@ -111,7 +111,7 @@ test_that("larger direction sets and independent validation obey monotonicity", 
   a <- SHDmedian(X, center = c(0,0),U=U[,1:6])
   b <- SHDmedian(X, center = c(0,0),U=U)
   expect_lte(b$search_bounds[1],a$search_bounds[2])
-  verification <- shd_verify_R(a$Sigma,U,shd_prepare_R(X,U)$Q)
+  verification <- shd_verify_R(a$Sigma_raw,U,shd_prepare_R(X,U)$Q)
   expect_lte(min(verification$lower,verification$upper),a$attained_k)
 })
 
@@ -191,7 +191,7 @@ test_that("approximate matrix respects the full 2D angular depth comparison", {
   exact <- SHDmedian(X,method="exact",center=c(0,0),initial_directions=8,cuts_per_iteration=8)
   arr <- angular_arrangement_d2(X)
   passed <- vapply(1:8,function(k)
-    separate_level_cells_d2(a$Sigma,prepare_level_cells_d2(arr,X,k),
+    separate_level_cells_d2(a$Sigma_raw,prepare_level_cells_d2(arr,X,k),
                             separation_tol=0)$feasible,logical(1))
   full_k <- max(c(0,which(passed)))
   expect_lte(full_k,a$attained_k)

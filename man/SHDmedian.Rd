@@ -19,7 +19,8 @@ SHDmedian(
   max_iterations = 200L,
   separation_tol = 1e-08,
   control = list(),
-  verbose = FALSE
+  verbose = FALSE,
+  gaussian_consistent = TRUE
 )
 }
 \arguments{
@@ -60,6 +61,10 @@ and \code{solver} (a list of Clarabel settings). Tolerances apply in internally
 scaled scatter units. Explicit solver verbosity overrides \code{verbose}.}
 
 \item{verbose}{Whether to report progress.}
+
+\item{gaussian_consistent}{Logical; if TRUE (default), multiply the raw
+scatter median by \code{1 / stats::qnorm(0.75)^2} for Gaussian consistency.
+Set FALSE to return the unscaled scatter median in \code{Sigma}.}
 }
 \value{
 An object of class \code{"SHDmedian"} with shared fields \code{method}
@@ -75,6 +80,10 @@ Approximation retains \code{U}, \code{domain}, \code{selected_k}, \code{attained
 diagnostics, \code{tolerances}, \code{scaling}, and \code{solver} metadata. For exact results,
 \code{search_bounds} contains the final supported optimum bracket; for approximation it
 contains the final supported optimum bracket.
+\code{Sigma_raw} stores the unscaled scatter median (NULL if unavailable),
+\code{gaussian_consistent} records the requested correction, and
+\code{consistency_factor} is the multiplier used to obtain \code{Sigma} from
+\code{Sigma_raw} (one when the correction is disabled).
 }
 \description{
 Unified interface to finite-direction SDP optimization in any dimension and
@@ -92,9 +101,15 @@ numerical bounds, tolerances and component timings.
 Certification uses numerical tolerances, not exact arithmetic.
 Approximation optimizes inclusive depth on a fixed finite direction set.
 Its attained depth is an upper bound on full directional depth of the
-returned matrix. A complete finite search does not certify the full optimum.
+raw median matrix. A complete finite search does not certify the full optimum.
 Unresolved numerical outcomes preserve supported search bounds.
 Method-specific settings are used only by the corresponding backend.
+For a Gaussian population with covariance V and the true center, every
+squared standardized projection has median \code{stats::qnorm(0.75)^2}.
+Thus the population scatter halfspace median is this constant times V.
+Gaussian scaling corrects this population factor; it is not a finite-sample
+unbiasedness correction. Depths, certification and all backend diagnostics
+refer to \code{Sigma_raw}, before Gaussian scaling.
 }
 \examples{
 if (requireNamespace("clarabel", quietly = TRUE)) {

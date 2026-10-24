@@ -35,7 +35,8 @@ test_that("SHDmedian returns the requested structure", {
       "k_min",
       "k_max",
       "timing",
-      "search_details", "domain", "search_bounds", "algorithm", "d", "center_method"
+      "search_details", "domain", "search_bounds", "Sigma_raw",
+      "gaussian_consistent", "consistency_factor", "algorithm", "d", "center_method"
     )
   )
 
