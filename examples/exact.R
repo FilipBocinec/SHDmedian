@@ -1,10 +1,15 @@
 library(SHDmedian)
 
 set.seed(42)
-X <- matrix(rnorm(100), ncol = 2)
-fit <- SHDmedian(X, method = "exact", center_method = "mean",
-  control = list(cache_geometry = "auto", solver_tol = 1e-9))
+
+X <- matrix(rnorm(50000), ncol = 2)
+
+fit <- SHDmedian(X, method = "approx", center = c(0,0))
+
 print(fit)
+cov(X)
+
+
 fit$Sigma
 fit$search_bounds
 fit$search_details$strict_depth

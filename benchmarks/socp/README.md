@@ -9,6 +9,6 @@ timings for benchmarking; they are not public package functions.
 `compare_shd_methods.R` defines a comparison helper accepting a supplied
 cutting-plane implementation and a common center.
 
-The CSV files and `benchmark_session.txt` are historical results supplied
-with the original standalone implementation, not timings from this integration.
-Running the benchmark overwrites the timing CSV and session file.
+Running the benchmark creates `benchmark_results.csv` and
+`benchmark_session.txt` in this directory. These generated results are ignored
+by Git.

@@ -1,7 +1,0 @@
-"method","repetition","n","elapsed","verified_k","strict_k","min_eigenvalue","reported_k","numerically_resolved","status","message"
-"point_socp",1,1000,1.07000000000016,483,483,0.478586706575249,483,TRUE,"resolved_numerically",""
-"cutting_plane",1,1000,232.1,483,483,0.479042486612696,NA,TRUE,"returned",""
-"cutting_plane",2,1000,309.15,483,483,0.479042486612696,NA,TRUE,"returned",""
-"point_socp",2,1000,1.39000000000033,483,483,0.478586706575249,483,TRUE,"resolved_numerically",""
-"point_socp",3,1000,1.53999999999996,483,483,0.478586706575249,483,TRUE,"resolved_numerically",""
-"cutting_plane",3,1000,173.48,483,483,0.479042486612696,NA,TRUE,"returned",""

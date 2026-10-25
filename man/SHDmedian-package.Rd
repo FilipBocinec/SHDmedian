@@ -12,12 +12,7 @@ through the unified SHDmedian() interface, with a supplied, mean, or Tukey
 center shared by both computational methods.
 }
 \author{
-\strong{Maintainer}: Filip BoDinec \email{bocinec@karlin.mff.cuni.cz}
-
-Authors:
-\itemize{
-  \item Filip BoDinec \email{bocinec@karlin.mff.cuni.cz}
-}
+\strong{Maintainer}: Filip Bočinec \email{bocinec@karlin.mff.cuni.cz}
 
 }
 \keyword{internal}

@@ -5,7 +5,7 @@ SHDlevel_socp <- getFromNamespace("SHDlevel_socp", "SHDmedian")
 SHDdepth_d2 <- getFromNamespace("SHDdepth_d2", "SHDmedian")
 .shd_data <- getFromNamespace(".shd_data", "SHDmedian")
 .shd_clock <- getFromNamespace(".shd_clock", "SHDmedian")
-# Reproduce the included timing experiment, from this directory:
+# Run the timing experiment from this directory:
 # Rscript benchmark_socp.R
 # Fixed center mu=0; location estimation and C++ compilation are excluded.
 library(SHDmedian)

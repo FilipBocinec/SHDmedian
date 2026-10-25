@@ -7,4 +7,6 @@
 inst/doc
 .validation/
 benchmarks/results/*.rds
+benchmarks/socp/*.csv
+benchmarks/socp/benchmark_session.txt
 /*.tar.gz

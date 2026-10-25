@@ -1,10 +1,11 @@
+
 # SHDmedian
 
 ## Installation
 
 Install the package directly from GitHub using `devtools`:
 
-```r
+``` r
 install.packages("devtools") # Run once if devtools is not installed.
 devtools::install_github("FilipBocinec/SHDmedian")
 library(SHDmedian)
@@ -12,18 +13,19 @@ library(SHDmedian)
 
 For either method, also install the optional solver:
 
-```r
+``` r
 install.packages("clarabel")
 ```
 
-The package contains C++ code, so installation requires compilation tools
-(Rtools on Windows, Xcode Command Line Tools on macOS, or a C++ toolchain on Linux).
+The package contains C++ code, so installation requires compilation
+tools (Rtools on Windows, Xcode Command Line Tools on macOS, or a C++
+toolchain on Linux).
 
 ## Usage
 
 `SHDmedian()` computes scatter halfspace medians through one interface:
 
-```r
+``` r
 # Finite-direction approximation in any positive dimension (the default).
 fit <- SHDmedian(X, method = "approx", center_method = "mean",
                  n_directions = 200, seed = 42)
@@ -35,38 +37,44 @@ fit2 <- SHDmedian(X2, method = "exact", center_method = "tukey")
 fit3 <- SHDmedian(X, method = "approx", center = rep(0, ncol(X)))
 ```
 
-Centering defaults to `"tukey"`; `"mean"` uses column means. Tukey centering
-above dimension two is approximate and requires suitable full-rank data.
-Use a supplied `center` or `"mean"` if Tukey centering fails.
+Centering defaults to `"tukey"`; `"mean"` uses column means. Tukey
+centering above dimension two is approximate and requires suitable
+full-rank data. Use a supplied `center` or `"mean"` if Tukey centering
+fails.
 
 Both methods return class `SHDmedian`, with `Sigma`, `center`, `method`,
-`status`, `depth`, `best_k`, `certified`, and timing information. Approximate
-`depth` is attained depth on the returned finite direction set `U`, also
-available as `depth_U`. It is an upper bound on the full directional depth of
-that matrix. Inspect `status`, `search_bounds`, and `levels` for numerical
-uncertainty. A complete approximate search is not a full-direction certificate.
-The returned matrix is one optimizer, not a barycenter of the median set.
+`status`, `depth`, `best_k`, `certified`, and timing information.
+Approximate `depth` is attained depth on the returned finite direction
+set `U`, also available as `depth_U`. It is an upper bound on the full
+directional depth of that matrix. Inspect `status`, `search_bounds`, and
+`levels` for numerical uncertainty. A complete approximate search is not
+a full-direction certificate. The returned matrix is one optimizer, not
+a barycenter of the median set.
 
 Approximation defaults to positive definite matrices (`domain = "pd"`),
-with `domain = "psd"` also available. Exact computation supports only positive definite matrices, also its default.
-Its SOCP formulation is exact in real arithmetic; numerical certification uses
-tolerances, and singular boundary cases may remain unresolved.
-Both methods require the optional `clarabel` package.
+with `domain = "psd"` also available. Exact computation supports only
+positive definite matrices, also its default. Its SOCP formulation is
+exact in real arithmetic; numerical certification uses tolerances, and
+singular boundary cases may remain unresolved. Both methods require the
+optional `clarabel` package.
 
 Approximate settings include `U`, `n_directions`, `seed`, and `control`
-(tolerances, kernel, model reuse, and Clarabel settings). Exact settings include
-`solver = "CLARABEL"` and `control` (geometry caching, tolerances, and Clarabel
-settings). Former cutting-plane arguments are retained but unused. See `?SHDmedian` for all arguments and output fields.
+(tolerances, kernel, model reuse, and Clarabel settings). Exact settings
+include `solver = "CLARABEL"` and `control` (geometry caching,
+tolerances, and Clarabel settings). Former cutting-plane arguments are
+retained but unused. See `?SHDmedian` for all arguments and output
+fields.
 
 Migration: replace `SHDmedian_approx(X, center, ...)` with
-`SHDmedian(X, method = "approx", center = center, ...)`. Replace old exact
-calls with `SHDmedian(X, method = "exact", ...)`, renaming `mu` to `center`.
-The former approximate function and its separate result class are removed.
+`SHDmedian(X, method = "approx", center = center, ...)`. Replace old
+exact calls with `SHDmedian(X, method = "exact", ...)`, renaming `mu` to
+`center`. The former approximate function and its separate result class
+are removed.
 
-The implementation separates shared validation, centering, and result handling
-from `shd_approx()` and dimension-specific exact backends. A future 3D exact
-algorithm can be added to `shd_exact_backend()` without changing the public API.
-See `doc/approximate-median.md` for numerical details and `benchmarks/approx.R`
-for reproducible comparisons.
+The implementation separates shared validation, centering, and result
+handling from `shd_approx()` and dimension-specific exact backends. A
+future 3D exact algorithm can be added to `shd_exact_backend()` without
+changing the public API. See `doc/approximate-median.md` for numerical
+details and `benchmarks/approx.R` for reproducible comparisons.
 
 See `doc/exact-socp.md` for the exact SOCP formulation and diagnostics.
